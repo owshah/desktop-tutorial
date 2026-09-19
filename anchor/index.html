@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Anchor — DBT Skills Coach</title>
+<style>
+  :root{
+    --bg:#0f1220; --panel:#171a2e; --panel2:#1e2240; --line:#2b3055;
+    --txt:#e9ecff; --muted:#a2a8cf; --accent:#7aa2ff; --accent2:#9d7dff;
+    --warm:#ffb37a; --ok:#6ee7b7; --warn:#ff8e8e;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial;background:var(--bg);color:var(--txt);height:100vh;overflow:hidden}
+  .app{display:grid;grid-template-columns:300px 1fr 300px;height:100vh}
+  .side{background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;padding:16px}
+  .side.right{border-right:none;border-left:1px solid var(--line)}
+  h1{font-size:17px;margin:0 0 2px}
+  .tag{font-size:11px;color:var(--muted);line-height:1.5}
+  h2{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:22px 0 8px}
+  .main{display:flex;flex-direction:column;min-width:0}
+  .topbar{padding:10px 18px;border-bottom:1px solid var(--line);background:var(--panel);display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .crisis{font-size:12px;color:var(--warm)}
+  .crisis b{color:var(--warn)}
+  #log{flex:1;overflow-y:auto;padding:22px 18px;display:flex;flex-direction:column;gap:14px}
+  .msg{max-width:72%;padding:12px 14px;border-radius:14px;line-height:1.55;font-size:14.5px;white-space:pre-wrap;animation:in .18s ease}
+  @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .bot{background:var(--panel2);border:1px solid var(--line);border-bottom-left-radius:4px;align-self:flex-start}
+  .me{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0c0f1e;font-weight:500;border-bottom-right-radius:4px;align-self:flex-end}
+  .sys{align-self:center;font-size:12px;color:var(--muted);background:transparent;border:1px dashed var(--line);border-radius:10px;padding:6px 12px}
+  .msg b{color:var(--accent)}
+  .me b{color:#0c0f1e}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 18px 10px}
+  .chip{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:7px 12px;border-radius:999px;font-size:13px;cursor:pointer}
+  .chip:hover{border-color:var(--accent);color:var(--accent)}
+  .composer{display:flex;gap:10px;padding:12px 18px 16px;border-top:1px solid var(--line);background:var(--panel)}
+  textarea{flex:1;resize:none;height:52px;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:12px 14px;font:inherit;font-size:14.5px;outline:none}
+  textarea:focus{border-color:var(--accent)}
+  button.send{background:var(--accent);border:0;color:#0c0f1e;font-weight:700;padding:0 20px;border-radius:12px;cursor:pointer}
+  .skill{display:block;width:100%;text-align:left;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:9px 11px;margin-bottom:7px;cursor:pointer;font-size:13px}
+  .skill:hover{border-color:var(--accent2)}
+  .skill small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+  .row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+  input[type=range]{width:100%;accent-color:var(--accent2)}
+  .num{font-variant-numeric:tabular-nums;color:var(--txt);font-weight:700;min-width:22px;text-align:right}
+  .entry{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:7px;font-size:12px;background:var(--panel2)}
+  .entry .t{color:var(--muted);font-size:11px}
+  .mini{font-size:11px;color:var(--muted);line-height:1.5}
+  .btn2{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 9px;font-size:12px;cursor:pointer}
+  .btn2:hover{color:var(--txt);border-color:var(--accent)}
+  svg{width:100%;height:60px}
+  .timer{font-size:34px;font-variant-numeric:tabular-nums;text-align:center;color:var(--accent);margin:6px 0}
+  .breath{height:8px;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 1s linear}
+  .hide{display:none}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <h1>Anchor</h1>
+    <div class="tag">A DBT-informed skills coach for intense emotions, fear of abandonment, black-and-white thinking, and urges. Practice tool — not a therapist, not for emergencies.</div>
+
+    <h2>Distress tolerance</h2>
+    <button class="skill" data-flow="tipp">TIPP<small>Drop body arousal fast (7–10/10 distress)</small></button>
+    <button class="skill" data-flow="stop">STOP<small>Pause before acting on an urge</small></button>
+    <button class="skill" data-flow="urge">Urge surfing<small>Ride out a self-harm / impulse wave</small></button>
+    <button class="skill" data-flow="soothe">Self-soothe + ACCEPTS<small>Distract and settle</small></button>
+    <button class="skill" data-flow="radical">Radical acceptance<small>For what you can't change right now</small></button>
+
+    <h2>Emotion regulation</h2>
+    <button class="skill" data-flow="checkfacts">Check the facts<small>Test the interpretation driving the feeling</small></button>
+    <button class="skill" data-flow="opposite">Opposite action<small>When the emotion doesn't fit the facts</small></button>
+    <button class="skill" data-flow="please">PLEASE<small>Reduce emotional vulnerability</small></button>
+
+    <h2>Interpersonal</h2>
+    <button class="skill" data-flow="dearman">DEAR MAN<small>Ask for something / say no</small></button>
+    <button class="skill" data-flow="repair">Repair after a blow-up<small>GIVE + accountability without shame</small></button>
+
+    <h2>Mindfulness &amp; insight</h2>
+    <button class="skill" data-flow="wisemind">Wise mind<small>Between emotion mind and reason mind</small></button>
+    <button class="skill" data-flow="dialectic">Dialectics / anti-splitting<small>Hold both truths about a person</small></button>
+    <button class="skill" data-flow="chain">Chain analysis<small>Unpack what led to the behaviour</small></button>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div><b>Anchor</b> <span class="tag">· DBT skills coach</span></div>
+      <div class="crisis"><b>In danger right now?</b> Call local emergency services · US/Canada 988 · UK 111 / Samaritans 116 123 · UAE 800 4673</div>
+    </div>
+    <div id="log"></div>
+    <div class="chips" id="chips"></div>
+    <div class="composer">
+      <textarea id="input" placeholder="What's going on right now? (e.g. 'she hasn't replied in 6 hours and I want to delete everything')"></textarea>
+      <button class="send" id="send">Send</button>
+    </div>
+  </main>
+
+  <aside class="side right">
+    <h2>Distress right now</h2>
+    <div class="row"><input type="range" id="suds" min="0" max="10" value="5"><span class="num" id="sudsN">5</span></div>
+    <div class="row" style="justify-content:space-between"><span class="mini">0 = calm · 10 = unbearable</span><button class="btn2" id="logSuds">Log</button></div>
+    <svg id="spark" viewBox="0 0 280 60" preserveAspectRatio="none"></svg>
+
+    <div id="timerBox" class="hide">
+      <h2>Paced breathing</h2>
+      <div class="timer" id="timerT">0:00</div>
+      <div class="breath" id="breathBar" style="width:20%"></div>
+      <div class="mini" id="breathLbl" style="text-align:center;margin-top:6px">—</div>
+      <button class="btn2" id="timerStop" style="margin-top:8px">Stop</button>
+    </div>
+
+    <h2>Diary card</h2>
+    <div class="mini">Emotions, urges and skills used, saved in this browser.</div>
+    <div id="diary" style="margin-top:8px"></div>
+    <button class="btn2" id="export">Export JSON</button>
+    <button class="btn2" id="clear">Clear</button>
+
+    <h2>Working agreements</h2>
+    <div class="mini">· Your feelings make sense <i>and</i> the story about them can be checked.<br>· You can be doing your best <i>and</i> need to do something different.<br>· No self-judgement language here — describe instead.<br>· Skills beat willpower. Practice while calm.</div>
+  </aside>
+</div>
+
+<script>
+/* ---------------------------------------------------------------
+   Anchor — a deterministic DBT-informed coaching agent.
+   Architecture: intent classifier -> validation layer -> flow engine.
+   No network calls; all state is local.
+----------------------------------------------------------------*/
+
+const log = document.getElementById('log');
+const chips = document.getElementById('chips');
+const input = document.getElementById('input');
+
+const store = {
+  get diary(){ try{ return JSON.parse(localStorage.getItem('anchor.diary')||'[]'); }catch(e){ return []; } },
+  set diary(v){ localStorage.setItem('anchor.diary', JSON.stringify(v.slice(-80))); }
+};
+
+const S = { flow:null, step:0, data:{}, lastEmotion:null, lastIntent:null, turns:0 };
+
+/* ---------------- message rendering ---------------- */
+function say(text, cls='bot'){
+  const d = document.createElement('div');
+  d.className = 'msg ' + cls;
+  d.innerHTML = text.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+  log.appendChild(d); log.scrollTop = log.scrollHeight;
+}
+function botSeq(lines){
+  lines.forEach((l,i)=> setTimeout(()=> say(l), i*450));
+}
+function setChips(list){
+  chips.innerHTML='';
+  (list||[]).forEach(c=>{
+    const b=document.createElement('button'); b.className='chip'; b.textContent=c;
+    b.onclick=()=>{ handle(c); };
+    chips.appendChild(b);
+  });
+}
+
+/* ---------------- lexicon / classifier ---------------- */
+const L = {
+  crisis:/\b(kill myself|end my life|suicid|don'?t want to (be here|live)|want to die|overdose|hang myself|not be alive|ending it)\b/i,
+  selfharm:/\b(cut|cutting|self[- ]harm|hurt myself|burn myself|punish myself|scratch(ing)? myself)\b/i,
+  abandon:/\b(left me|leaving me|abandon|ghost(ed|ing)?|hasn'?t (replied|texted|answered)|didn'?t (reply|text|answer)|ignoring me|going to leave|breakup|broke up|dump(ed)?|blocked me|distant|pulling away|drifting)\b/i,
+  anger:/\b(furious|rage|so angry|hate (him|her|them|you)|want to scream|pissed|livid|explode)\b/i,
+  shame:/\b(disgusting|worthless|piece of (shit|garbage)|hate myself|so stupid|embarrass|humiliat|ashamed|shame|burden)\b/i,
+  empty:/\b(empty|numb|nothing inside|hollow|void|don'?t feel anything|no identity|who i am|don'?t know who i am)\b/i,
+  split:/\b(hate (him|her|them) now|they'?re (awful|evil|a monster)|never cared|all bad|red flag|i was wrong about (him|her|them)|toxic)\b/i,
+  impulse:/\b(spend|spending|drink|drunk|drugs|binge|text (him|her|them) (again|50)|send (it|the text)|delete (everything|my)|quit my job|hook ?up|speeding|drive fast|impulsive|impulse)\b/i,
+  panic:/\b(panic|can'?t breathe|heart (is )?racing|shaking|spiral(l)?ing|freaking out|losing it|out of control)\b/i,
+  conflict:/\b(argu|fight|fought|yelled|screamed at|blow ?up|blew up|said things|snapped at)\b/i,
+  anxiety:/\b(anxious|anxiety|scared|terrified|afraid|worried|dread)\b/i,
+  sad:/\b(sad|crying|cried|depress|hopeless|exhausted|tired of|lonely|alone)\b/i,
+  calm:/\b(better|calmer|okay now|it helped|thanks|thank you|good)\b/i,
+  skillask:/\b(what (can|should) i do|help me|i need (a )?skill|how do i (cope|stop)|give me something|show me a skill|a skill|which skill)\b/i,
+  yes:/^(y|yes|yeah|yep|ok(ay)?|sure|i guess|fine|let'?s|do it|alright)\b/i,
+  no:/^(n|no|nope|not (now|really)|can'?t|don'?t want)\b/i
+};
+
+function classify(t){
+  if(L.crisis.test(t)) return 'crisis';
+  if(L.selfharm.test(t)) return 'selfharm';
+  if(L.panic.test(t)) return 'panic';
+  if(L.impulse.test(t)) return 'impulse';
+  if(L.split.test(t)) return 'split';
+  if(L.abandon.test(t)) return 'abandon';
+  if(L.shame.test(t)) return 'shame';
+  if(L.anger.test(t)) return 'anger';
+  if(L.conflict.test(t)) return 'conflict';
+  if(L.empty.test(t)) return 'empty';
+  if(L.anxiety.test(t)) return 'anxiety';
+  if(L.sad.test(t)) return 'sad';
+  if(L.skillask.test(t)) return 'skillask';
+  if(L.calm.test(t)) return 'calm';
+  return 'open';
+}
+
+/* ---------------- validation layer (Linehan levels 3–5) ---------------- */
+const VALIDATE = {
+  abandon:[
+    "Six hours of silence can feel like proof of something final — that's how an abandonment alarm works. It doesn't wait for evidence.",
+    "Wanting reassurance when someone goes quiet isn't clingy. It's a nervous system that learned closeness can vanish without warning."
+  ],
+  anger:["Anger that big usually means something that matters to you got stepped on. The size of it makes sense before we look at what to do with it."],
+  shame:["Shame lies with total confidence. What you're saying about yourself right now is the feeling talking, not a verdict."],
+  empty:["Emptiness is one of the hardest ones because there's nothing to push against. Feeling hollow isn't you being broken — it's a real, documented state, and it passes."],
+  split:["Right now they look all-bad, and that flip is real and painful. It usually happens when someone we depend on hurts us — the mind protects by collapsing them into one thing."],
+  panic:["Your body is in full alarm. Nothing you decide in this state will be decided by you — it'll be decided by adrenaline."],
+  impulse:["The urge is loud because it genuinely works — it would give relief in the next ten minutes. That's why it's hard, not because you're weak."],
+  conflict:["Blowing up and then hating yourself for it is an exhausting loop. Both parts get airtime here: the hurt that caused it and the damage it did."],
+  anxiety:["Your body is bracing for something. That's uncomfortable, not dangerous."],
+  sad:["That sounds genuinely heavy, and you've been carrying it a while."],
+  selfharm:["Thank you for saying it out loud instead of just doing it. The urge makes sense as a way to get relief — and I want to help you get that relief a different way."],
+  open:["I'm listening. Tell me what's happening."]
+};
+
+const NEXT = {
+  abandon:{ask:"Want to check the facts on what the silence means, or do the body-first skill before we think about it at all?", chips:["Check the facts","TIPP first","Just listen"]},
+  anger:{ask:"Do you want to cool the body down first, or work out what the anger is protecting?", chips:["TIPP","Check the facts","Just listen"]},
+  shame:{ask:"Shame usually wants you to hide. Want to try opposite action, or check whether the shame actually fits the facts?", chips:["Opposite action","Check the facts","Just listen"]},
+  empty:{ask:"Emptiness responds better to sensation than to thinking. Want a self-soothe sequence, or to talk about what drained out?", chips:["Self-soothe","Just listen"]},
+  split:{ask:"Want to try holding both truths about them at once? It's uncomfortable but it stops the flip.", chips:["Dialectics","Just listen"]},
+  panic:{ask:"Let's do TIPP — cold water and paced breathing — before anything else. Ready?", chips:["TIPP","Not yet"]},
+  impulse:{ask:"Let's put time between you and it. STOP first, then urge surfing?", chips:["STOP","Urge surfing","Just listen"]},
+  conflict:{ask:"Do you want to work on repair, or on what set it off?", chips:["Repair","Chain analysis","Just listen"]},
+  anxiety:{ask:"Want to check the facts, or settle the body first?", chips:["Check the facts","TIPP","Just listen"]},
+  sad:{ask:"Want to keep talking, or try something small and concrete?", chips:["Just listen","Self-soothe","PLEASE"]},
+  open:{ask:"Where is the distress right now, 0 to 10?", chips:["Below 4","5 to 7","8 or above"]}
+};
+
+/* ---------------- flows ---------------- */
+const FLOWS = {
+  crisis:{
+    steps:[
+      ()=>[ "I'm stopping everything else. **Are you safe in this moment?** Do you have a plan or means near you right now? (yes / no)" ],
+      (a)=> L.yes.test(a)
+        ? ["**Please get another human involved now** — call your local emergency number, or 988 (US/Canada), 116 123 (UK Samaritans), 800 4673 (UAE). If there are means nearby, put distance between you and them: give them to someone, lock them away, leave the room.",
+           "I'm a practice tool and I can't keep you safe on my own. Can you make one call or message to a person while I stay here with you?"]
+        : ["Okay. I'm glad. We're still going to treat this as serious and get your body out of the red zone.",
+           "Two things that work in the next five minutes: cold water on your face for 30 seconds, and slow breathing with the out-breath longer than the in-breath. Want me to run the timer?"],
+      ()=>["Whatever you choose next, one commitment: **nothing permanent tonight.** Distress this high is a state, and states end — usually within 20–90 minutes once the body comes down.",
+           "Type anything when you want to keep going, or pick a skill on the left."]
+    ],
+    chips:[["yes","no"],["Run the timer","Not now"],["Okay"]]
+  },
+  tipp:{
+    intro:"**TIPP** — this is physiology, not thinking. It works when you're too activated to use words.",
+    steps:[
+      ()=>["**T — Temperature.** Cold water on your face, holding your breath, for 30 seconds. Or an ice pack / cold can on your eyes and cheekbones. This triggers the dive reflex and drops heart rate fast.\n\nTell me when you've done it, or say 'skip' if you can't right now."],
+      ()=>["**I — Intense exercise.** 60 seconds of anything all-out: run up stairs, jumping jacks, push against a wall. Burns off the adrenaline that's already in your blood.\n\nDone / skip?"],
+      ()=>{ startBreathing(); return ["**P — Paced breathing.** In for 4, out for 6. The long exhale is the active ingredient. Timer's running on the right for 2 minutes — follow it.\n\nSay 'done' when you finish."]; },
+      ()=>["**P — Paired muscle relaxation.** Breathe in, clench your fists and shoulders hard. Breathe out slowly, release, and notice the drop.\n\nWhat's your distress now, 0–10?"],
+      (a)=>{ const n=parseInt(a); if(!isNaN(n)) logSUDS(n,'after TIPP');
+             return [n>=8 ? "Still high. That's normal if the wave is fresh — run temperature once more, and let's plan for the next 20 minutes rather than solving anything."
+                          : "That's a real drop, and you did it yourself — worth noticing, because your brain will claim skills don't work.",
+                     "Want to look at what set this off, or stay in coping mode for now?"]; }
+    ],
+    chips:[["Done","Skip"],["Done","Skip"],["Done"],["8","6","4"],["Chain analysis","Stay in coping mode"]]
+  },
+  stop:{
+    intro:"**STOP** — four moves, about sixty seconds. The goal is only to not make it worse.",
+    steps:[
+      ()=>["**S — Stop.** Freeze. Don't send, don't spend, don't leave. Hands off the phone. Say 'ok' when you have."],
+      ()=>["**T — Take a step back.** Physically if you can — other room, outside, one deep breath before anything else.\n\nWhat's the urge, exactly? Say it plainly."],
+      (a)=>{ S.data.urge=a; return ["**O — Observe.** Just facts: what happened, what your body is doing, what you're about to do. No interpretations yet.\n\nIn one sentence: what actually happened?"]; },
+      (a)=>{ S.data.event=a; return [`**P — Proceed mindfully.** You want to ${short(S.data.urge)} because of ${short(S.data.event)}.\n\nTwo questions: what does the urge promise you in the next 10 minutes — and what does it cost you tomorrow?`]; },
+      (a)=>{ S.data.cost=a; logDiary({type:'STOP', urge:S.data.urge, note:a});
+             return ["That cost is the part emotion mind deletes. You just held it in view, which is the whole skill.",
+                     "Want to ride the urge out with urge surfing, or do something incompatible with it instead?"]; }
+    ],
+    chips:[["ok"],[],[],[],["Urge surfing","Opposite action","I'm okay now"]]
+  },
+  urge:{
+    intro:"**Urge surfing.** We're not fighting the urge or obeying it. We're timing it.",
+    steps:[
+      ()=>["Urges behave like waves: they rise, crest, and fall — usually inside 20–30 minutes, even when they feel permanent.\n\nRate it now, 0–10. Then: where do you feel it in your body?"],
+      (a)=>{ S.data.u0=a; return ["Stay with that spot. Describe the sensation without the story — tight, hot, buzzing, heavy? Just texture and temperature."]; },
+      ()=>["Good. Now add distance from means for the next 20 minutes: hand your phone/card/blade to someone, or put it somewhere that takes effort to reach. What can you move away from you right now?"],
+      (a)=>{ S.data.barrier=a; startTimer(20*60,'Surfing the wave'); return ["Timer's on the right for 20 minutes. Do one occupying thing while it runs — cold shower, loud music, walk, ice cube in the fist, texting someone about anything else.",
+             "Come back and tell me the number when it goes off."]; },
+      (a)=>{ const n=parseInt(a); if(!isNaN(n)){ logSUDS(n,'after urge surfing'); logDiary({type:'Urge surfed', from:S.data.u0, to:n}); }
+             return ["You stayed on the board. Every time you ride one out, the next one gets slightly less authoritative — that's not a slogan, it's extinction learning.",
+                     "Worth telling your therapist about this one at the next session if you have one."]; }
+    ],
+    chips:[[],[],[],[],["7","5","3"]]
+  },
+  checkfacts:{
+    intro:"**Check the facts.** Not 'think positive' — just testing whether the interpretation fits the evidence.",
+    steps:[
+      ()=>["What's the emotion, and how strong (0–10)?"],
+      (a)=>{ S.data.emo=a; return ["What's the event that prompted it? Facts only — a camera would record it. No motives, no 'obviously they...'"]; },
+      (a)=>{ S.data.fact=a; return [`Now the interpretation: what are you telling yourself ${short(S.data.fact)} **means**?`]; },
+      (a)=>{ S.data.interp=a; return ["What's the evidence **for** that interpretation? Give me the strongest case."]; },
+      (a)=>{ S.data.forE=a; return ["Now against it. What are two other explanations a fair observer would have to consider?"]; },
+      (a)=>{ S.data.against=a; return ["And the catastrophe question: if the worst interpretation were true, what would you actually do? Not how it'd feel — what you'd do."]; },
+      (a)=>{ S.data.cope=a; logDiary({type:'Check the facts', interp:S.data.interp, alt:S.data.against});
+             return [`So: the fact is ${short(S.data.fact)}. The interpretation is ${short(S.data.interp)}. Alternatives exist: ${short(S.data.against)}. And even at worst, you'd ${short(S.data.cope)}.`,
+                     "Does the emotion still fit the facts at full intensity? (fits / doesn't fit / partly)"]; },
+      (a)=>/doesn|partly|no/i.test(a)
+        ? ["Then the emotion is doing more work than the situation calls for — that's the cue for **opposite action**. Want to build one?"]
+        : ["Then it fits, and the skill isn't to argue with it — it's problem-solving or tolerating it while it runs its course. Which one is available to you today?"]
+    ],
+    chips:[[],[],[],[],[],[],["fits","doesn't fit","partly"],["Opposite action","Just listen"]]
+  },
+  opposite:{
+    intro:"**Opposite action** — for when the emotion doesn't fit the facts, or acting on it makes things worse.",
+    steps:[
+      ()=>["Which emotion are we working against? (fear / shame / anger / sadness / love-urge to chase someone)"],
+      (a)=>{ S.data.emo=a.toLowerCase();
+             const urge = /fear|anx/.test(S.data.emo)?"avoid, check, seek reassurance"
+                        : /shame/.test(S.data.emo)?"hide, go silent, delete yourself from the room"
+                        : /ang/.test(S.data.emo)?"attack, send the message, withdraw punitively"
+                        : /sad|depress/.test(S.data.emo)?"withdraw, stay in bed, cancel things"
+                        : "chase, over-text, over-give";
+             S.data.urge=urge;
+             return [`The action urge in ${S.data.emo} is usually to **${urge}**. Does that match what you want to do right now?`]; },
+      ()=>{ const o = /fear|anx/.test(S.data.emo)?"Approach it. Do the thing, at a small scale, right now — and keep your posture open while you do it."
+                   : /shame/.test(S.data.emo)?"Stay visible. Keep your head up, say the thing out loud to someone safe, don't apologise for existing."
+                   : /ang/.test(S.data.emo)?"Gently avoid, or do something kind for them mentally. Unclench your hands, soften your voice, leave the message unsent."
+                   : /sad|depress/.test(S.data.emo)?"Get active. One small thing that used to matter — outside, moving, with a person if possible."
+                   : "Distance and distract. Don't send the fourth message; put the energy into your own thing for the next hour.";
+            S.data.opp=o;
+            return [`Opposite action: **${o}**\n\nAnd it has to go **all the way** — face, voice, posture, thoughts. Half-hearted opposite action rehearses the emotion.`,
+                    "What's the smallest version you'll actually do in the next hour?"]; },
+      (a)=>{ logDiary({type:'Opposite action', emotion:S.data.emo, action:a});
+             return [`Logged: ${short(a)}. Do it repeatedly, not once — intensity drops with repetition, not insight.`,
+                     "Come back and tell me how it went; that's the part that builds the habit."]; }
+    ],
+    chips:[["fear","shame","anger","sadness"],["yes","not exactly"],[],[]]
+  },
+  dearman:{
+    intro:"**DEAR MAN** — for asking for something or saying no without it turning into a rupture.",
+    steps:[
+      ()=>["Who's it with, and what's the one thing you want from them? (one thing — not the whole relationship)"],
+      (a)=>{ S.data.ask=a; return ["**D — Describe.** The situation in facts, no blame. Write your sentence."]; },
+      (a)=>{ S.data.d=a; return ["**E — Express.** How you feel about it, using 'I feel…', not 'you always…'."]; },
+      (a)=>{ S.data.e=a; return ["**A — Assert.** Ask clearly and specifically. Not hinting, not testing them. What exactly do you want them to do?"]; },
+      (a)=>{ S.data.a=a; return ["**R — Reinforce.** What's in it for them, or how it helps the relationship?"]; },
+      (a)=>{ S.data.r=a; logDiary({type:'DEAR MAN', ask:S.data.ask});
+             return [`Your script:\n\n"${S.data.d} ${S.data.e} ${S.data.a} ${S.data.r}"`,
+                     "**M — Mindful:** broken record, repeat the ask, don't get dragged into old arguments.\n**A — Appear confident:** steady voice, eye contact, no apologising for asking.\n**N — Negotiate:** offer an alternative; a 'no' to this version isn't a 'no' to you.",
+                     "Last thing: decide now what you'll do if they say no — before you're in the room. What is it?"]; },
+      (a)=>["Good. Having that answer in advance is what keeps a 'no' from becoming an abandonment.", "Want to rehearse the delivery, or leave it there?"]
+    ],
+    chips:[[],[],[],[],[],[],["Rehearse","Leave it there"]]
+  },
+  repair:{
+    intro:"**Repair** — accountability without self-destruction. Both are possible.",
+    steps:[
+      ()=>["First: what did you actually do? Behaviour only, no adjectives about yourself."],
+      (a)=>{ S.data.did=a; return [`Okay — ${short(a)}. That's a behaviour, not an identity. What was going on for you right before it? (the hurt underneath the blow-up)`]; },
+      (a)=>{ S.data.why=a; return ["Now the repair, three parts and nothing more: **name it, own the impact, say what you'll do differently.** No long explanation, no self-attack — self-attack pulls them into reassuring you, which isn't repair.\n\nWrite your version."]; },
+      (a)=>{ logDiary({type:'Repair', behaviour:S.data.did});
+             return [`"${a}"\n\nThat's enough. If you add 'I'm the worst, you should leave me', you make them manage your shame instead of their hurt.`,
+                     "Timing matters too: send it when you're below about 4/10. Where are you now?"]; },
+      (a)=>["Noted. If you're above that, sit on it an hour — the message will still be true later, and it'll land better.",
+            "Also worth saying: one blow-up isn't proof the relationship is over. That's the abandonment alarm editorialising."]
+    ],
+    chips:[[],[],[],["3","5","8"],[]]
+  },
+  chain:{
+    intro:"**Chain analysis** — the core BPD-treatment tool. We map the links so you can spot where to intervene next time. No judgement, just the chain.",
+    steps:[
+      ()=>["What's the target behaviour we're analysing? (the thing you want to happen less)"],
+      (a)=>{ S.data.tb=a; return ["**Vulnerability factors:** what made you more flammable that day? Sleep, food, alcohol, illness, being alone, an anniversary?"]; },
+      (a)=>{ S.data.vuln=a; return ["**Prompting event:** what happened right before the chain started? Precise moment, outside event."]; },
+      (a)=>{ S.data.pe=a; return ["**The links:** walk me through it — thought, feeling, sensation, action, then the next thought. Take as much space as you need."]; },
+      (a)=>{ S.data.links=a; return ["**Consequences:** what happened right after — short-term relief, and then the longer-term cost?"]; },
+      (a)=>{ S.data.cons=a;
+             return [`Here's your chain:\n\n**Vulnerable:** ${short(S.data.vuln)}\n**Prompt:** ${short(S.data.pe)}\n**Links:** ${short(S.data.links)}\n**Behaviour:** ${short(S.data.tb)}\n**Consequences:** ${short(S.data.cons)}`,
+                     "Now the useful part: pick the **earliest** link where a skill could have fit. Not the last one — the first one you can realistically catch."]; },
+      (a)=>{ logDiary({type:'Chain analysis', behaviour:S.data.tb, insertion:a});
+             return [`That's your insertion point: ${short(a)}. What skill goes there, and what's the cue that tells you it's time?`]; },
+      (a)=>["Written down and logged. This is the work that actually moves the needle over months — chains are boring and they change behaviour more than insight does.",
+            "One more thing: whatever you did, it made sense as a solution to an unbearable moment. We're just building cheaper solutions."]
+    ],
+    chips:[[],[],[],[],[],[],[],[]]
+  },
+  dialectic:{
+    intro:"**Dialectics** — the antidote to the flip between 'they're everything' and 'they're nothing'.",
+    steps:[
+      ()=>["Who are we talking about, and what's the all-or-nothing statement in your head right now? Say it exactly as it sounds."],
+      (a)=>{ S.data.stmt=a; return ["Okay. That statement is holding something true — what is it? What did they genuinely do that hurt?"]; },
+      (a)=>{ S.data.true1=a; return ["Now the other truth — not a defence of them, just a fact that also exists. Something real you'd have said about them last week."]; },
+      (a)=>{ S.data.true2=a;
+             return [`Both: **${short(S.data.true1)}** AND **${short(S.data.true2)}**.\n\nNot 'but' — 'and'. Holding both is uncomfortable, and that discomfort is the feeling of not splitting.`,
+                     "Given both are true, what do you want to do about the relationship — not forever, just this week?"]; },
+      (a)=>{ logDiary({type:'Dialectics', both:[S.data.true1,S.data.true2]});
+             return ["That's a decision made from wise mind rather than from the flip. If the hate comes back tonight, it doesn't mean this was fake — it means the wave came back."]; }
+    ],
+    chips:[[],[],[],[],[]]
+  },
+  wisemind:{
+    intro:"**Wise mind** — emotion mind knows what hurts, reason mind knows what's logical. Wise mind is the overlap.",
+    steps:[
+      ()=>["What's the decision or question you're sitting with?"],
+      (a)=>{ S.data.q=a; return ["**Emotion mind** first — what does the feeling want to do? No editing."]; },
+      (a)=>{ S.data.em=a; return ["**Reason mind** — what do the facts and consequences say, coldly?"]; },
+      (a)=>{ S.data.rm=a; return ["Now breathe in and, on the out-breath, ask yourself the question. Wait for the response rather than constructing one. Slow, quiet answers are usually wise mind; urgent, righteous ones are usually emotion mind.\n\nWhat came?"]; },
+      (a)=>{ logDiary({type:'Wise mind', question:S.data.q, answer:a});
+             return [`Wise mind said: ${short(a)}.\n\nIf it felt calm and a bit inconvenient, that's usually the real thing.`]; }
+    ],
+    chips:[[],[],[],[],[]]
+  },
+  soothe:{
+    intro:"**Self-soothe + ACCEPTS** — for getting through the next hour, not for fixing anything.",
+    steps:[
+      ()=>["Five senses, one each. Pick the easiest one to start: **vision** (something to look at), **sound** (one song, not a sad one), **smell** (soap, coffee, cold air), **taste** (something sharp — mint, lemon), **touch** (hot shower, weighted blanket, pet).\n\nWhich one can you do in the next 3 minutes?"],
+      (a)=>{ S.data.sense=a; return [`Do that one now. While it's happening, the ACCEPTS list for after:\n\n**A**ctivities · **C**ontributing (do one small thing for someone) · **C**omparisons (to your own worse moments, not other people's lives) · **E**motions (opposite-mood media) · **P**ushing away (shelve it for 2 hours, deliberately) · **P**ushing thoughts aside · **S**ensations (ice, cold shower, loud music)\n\nWhich two are realistic tonight?`]; },
+      (a)=>{ logDiary({type:'Self-soothe', used:[S.data.sense,a]});
+             return ["Good. Distraction gets a bad name, but skilful distraction is what stops a bad hour from becoming a bad week.",
+                     "Set yourself a check-in time — when will you come back to the problem itself?"]; }
+    ],
+    chips:[["touch","taste","sound","smell","vision"],[],[]]
+  },
+  radical:{
+    intro:"**Radical acceptance** — accepting reality isn't approving of it. It's stopping the second layer of pain.",
+    steps:[
+      ()=>["What's the reality you're fighting? The one where 'this shouldn't be happening' keeps looping."],
+      (a)=>{ S.data.r=a; return [`How much of the pain is the thing itself, and how much is the fight with it — that it's unfair, that it shouldn't be? Rough split.`]; },
+      (a)=>["Try the sentence out loud, no matter how much you hate it: *'This is what happened. Fighting it doesn't change it. I can be devastated and still accept that it's real.'*\n\nWhat comes up when you say it?"],
+      (a)=>{ logDiary({type:'Radical acceptance', reality:S.data.r});
+             return ["Resistance is normal — acceptance isn't a single act, it's something you do again every time the 'shouldn't' comes back. Sometimes dozens of times a day.",
+                     "You don't have to like it. You just stop paying interest on it."]; }
+    ],
+    chips:[[],[],[],[]]
+  },
+  please:{
+    intro:"**PLEASE** — this is unglamorous and it's the highest-leverage thing for emotional intensity.",
+    steps:[
+      ()=>["Quick audit, answer roughly:\n\n**PL** — physical illness treated?\n**E** — eating regularly today?\n**A** — avoiding mood-altering substances?\n**S** — sleep last night (hours)?\n**E** — exercise / movement today?"],
+      (a)=>{ logDiary({type:'PLEASE', audit:a});
+             return [`Emotional intensity sits maybe 2–3 points higher on a day with poor sleep or no food. That's not willpower, it's biology.`,
+                     "Pick **one** to fix in the next 24 hours — just one. Which?"]; },
+      (a)=>["That's the one. Tomorrow's version of you will be measurably harder to knock over.", "Anything else you want to work on right now?"]
+    ],
+    chips:[[],[],[]]
+  }
+};
+
+const FLOW_ALIASES = {
+  "tipp":"tipp","tipp first":"tipp","run the timer":"tipp","stop":"stop","urge surfing":"urge",
+  "self-soothe":"soothe","self soothe":"soothe","radical acceptance":"radical",
+  "check the facts":"checkfacts","opposite action":"opposite","please":"please",
+  "dear man":"dearman","dearman":"dearman","repair":"repair","wise mind":"wisemind",
+  "dialectics":"dialectic","chain analysis":"chain"
+};
+
+/* ---------------- engine ---------------- */
+function startFlow(name){
+  const f = FLOWS[name]; if(!f) return;
+  S.flow=name; S.step=0; S.data={};
+  const out=[]; if(f.intro) out.push(f.intro);
+  out.push(...f.steps[0](''));
+  botSeq(out);
+  setChips((f.chips&&f.chips[0])||[]);
+}
+
+function advance(text){
+  const f = FLOWS[S.flow];
+  S.step++;
+  if(S.step >= f.steps.length){ endFlow(); return; }
+  botSeq(f.steps[S.step](text));
+  setChips((f.chips&&f.chips[S.step])||[]);
+  if(S.step === f.steps.length-1) setTimeout(()=>{ S.flow=null; S.step=0; }, 100);
+}
+
+function endFlow(){
+  S.flow=null; S.step=0;
+  setChips(["What else can I do?","Log this in my diary card","I'm okay now"]);
+}
+
+function handle(text){
+  text = (text||'').trim(); if(!text) return;
+  say(text,'me'); input.value=''; S.turns++;
+
+  // crisis always pre-empts, even mid-flow
+  if(L.crisis.test(text) && S.flow!=='crisis'){ startFlow('crisis'); return; }
+
+  const alias = FLOW_ALIASES[text.toLowerCase()];
+  if(alias && S.flow!==alias){ startFlow(alias); return; }
+
+  if(S.flow){
+    if(/^(stop|quit|exit|nevermind|never mind|just listen)$/i.test(text)){
+      S.flow=null; setChips([]);
+      say("Stopped. No pressure to do a skill — I'm here either way. What's going on?");
+      return;
+    }
+    advance(text); return;
+  }
+
+  const intent = classify(text);
+  S.lastIntent = intent;
+
+  if(intent==='crisis'){ startFlow('crisis'); return; }
+  if(intent==='selfharm'){
+    botSeq([pick(VALIDATE.selfharm), "Before anything else: are you safe right now, and is anything you'd use within reach? (yes / no)"]);
+    S.flow='crisis'; S.step=0; setChips(["yes","no"]); return;
+  }
+  if(intent==='calm'){
+    botSeq(["Good — notice that it changed, because your mind will insist it never does.",
+            "Worth a diary card entry while it's fresh? What skill did you use, and did it help?"]);
+    setChips(["Log it","Something else came up"]); return;
+  }
+  if(intent==='skillask'){
+    botSeq(["Tell me the intensity first — skills are matched to arousal, not to topic.",
+            "Above 7/10, thinking skills won't land; we do body first (TIPP). Below that, we can look at the situation itself.\n\nWhere are you?"]);
+    setChips(["8 or above","5 to 7","Below 4"]); return;
+  }
+  if(/^(8 or above|8|9|10)$/i.test(text)){ startFlow('tipp'); return; }
+  if(/^(5 to 7|5|6|7)$/i.test(text)){ botSeq(["That's the range where check the facts works. Want to run it?"]); setChips(["Check the facts","Self-soothe","Just listen"]); return; }
+  if(/^(below 4|0|1|2|3|4)$/i.test(text)){ botSeq(["Good range for the useful-but-unexciting work: chain analysis on something recent, a DEAR MAN you've been putting off, or PLEASE.","What's worth the time?"]); setChips(["Chain analysis","DEAR MAN","PLEASE"]); return; }
+  if(/^just listen$/i.test(text)){ botSeq(["Okay. No skills, no agenda. Say as much as you want."]); setChips([]); return; }
+  if(/^log it$/i.test(text) || /log this/i.test(text)){ botSeq(["What emotion, intensity, and skill used? One line is fine."]); S.flow=null; S.data.logging=true; setChips([]); return; }
+  if(S.data.logging){ logDiary({type:'Note', note:text}); S.data.logging=false; botSeq(["Logged on the right."]); return; }
+
+  const v = VALIDATE[intent] || VALIDATE.open;
+  const n = NEXT[intent] || NEXT.open;
+  const extra = reflect(text, intent);
+  botSeq([pick(v), ...(extra?[extra]:[]), n.ask]);
+  setChips(n.chips);
+}
+
+function reflect(text,intent){
+  if(intent==='abandon') return "One thing worth naming: the feeling is 'they're leaving'. The fact so far is 'they haven't responded yet'. Those are different, and the gap between them is where the skill goes.";
+  if(intent==='split') return "Notice the word 'never' or 'always' in there. Those words are the fingerprint of emotion mind, not evidence.";
+  if(intent==='shame') return "Try restating it as behaviour instead of identity — 'I did X' rather than 'I am X'. It sounds like a trick; it measurably changes what you do next.";
+  if(intent==='empty') return "Emptiness often shows up right after an intense episode, or when you've been shaping yourself around someone else for a while. Either fits?";
+  if(intent==='impulse') return "Emotion mind has a very short time horizon. Our whole job for the next 20 minutes is to widen it.";
+  return null;
+}
+
+const short = s => { s=(s||'').trim().replace(/\s+/g,' '); return s.length>110? s.slice(0,110)+'…' : s; };
+const pick = a => Array.isArray(a)? a[Math.floor(Math.random()*a.length)] : a;
+
+/* ---------------- diary card / SUDS ---------------- */
+function logDiary(obj){
+  const d = store.diary;
+  d.push(Object.assign({at:new Date().toISOString()}, obj));
+  store.diary = d; renderDiary();
+}
+function logSUDS(n, note){ logDiary({type:'Distress', suds:n, note:note||''}); }
+
+function renderDiary(){
+  const el=document.getElementById('diary'); const d=store.diary.slice().reverse().slice(0,12);
+  el.innerHTML = d.length? '' : '<div class="mini">No entries yet.</div>';
+  d.forEach(e=>{
+    const div=document.createElement('div'); div.className='entry';
+    const t=new Date(e.at).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    const body = Object.entries(e).filter(([k])=>!['at','type'].includes(k))
+      .map(([k,v])=>`${k}: ${short(String(Array.isArray(v)?v.join(' / '):v))}`).join('<br>');
+    div.innerHTML = `<div class="t">${t}</div><b>${e.type}</b><br>${body}`;
+    el.appendChild(div);
+  });
+  renderSpark();
+}
+function renderSpark(){
+  const pts = store.diary.filter(e=>typeof e.suds==='number').slice(-20).map(e=>e.suds);
+  const svg=document.getElementById('spark');
+  if(pts.length<2){ svg.innerHTML='<text x="4" y="34" fill="#a2a8cf" font-size="11">Log distress to see your trend</text>'; return; }
+  const w=280,h=60, dx = w/(pts.length-1);
+  const path = pts.map((p,i)=>`${i?'L':'M'}${(i*dx).toFixed(1)},${(h-4-(p/10)*(h-10)).toFixed(1)}`).join(' ');
+  svg.innerHTML=`<path d="${path}" fill="none" stroke="#9d7dff" stroke-width="2"/>` +
+    pts.map((p,i)=>`<circle cx="${(i*dx).toFixed(1)}" cy="${(h-4-(p/10)*(h-10)).toFixed(1)}" r="2.5" fill="#7aa2ff"/>`).join('');
+}
+
+/* ---------------- timers ---------------- */
+let timerId=null;
+function startTimer(secs,label){
+  clearInterval(timerId);
+  document.getElementById('timerBox').classList.remove('hide');
+  document.getElementById('breathLbl').textContent=label||'';
+  let left=secs;
+  const t=document.getElementById('timerT');
+  const tick=()=>{ t.textContent = Math.floor(left/60)+':'+String(left%60).padStart(2,'0');
+    if(left--<=0){ clearInterval(timerId); say("Timer's done. Where's the number now, 0–10?"); setChips(["7","5","3"]); } };
+  tick(); timerId=setInterval(tick,1000);
+}
+let breathId=null;
+function startBreathing(){
+  clearInterval(breathId); startTimer(120,'Breathe with the bar');
+  const bar=document.getElementById('breathBar'), lbl=document.getElementById('breathLbl');
+  let phase=0, c=0; // 4 in, 6 out
+  breathId=setInterval(()=>{
+    if(phase===0){ c++; bar.style.width=(20+20*c)+'%'; lbl.textContent='Breathe in… '+c;
+      if(c>=4){phase=1;c=0;} }
+    else { c++; bar.style.width=(100-13.3*c)+'%'; lbl.textContent='Breathe out… '+c;
+      if(c>=6){phase=0;c=0;} }
+  },1000);
+  setTimeout(()=>clearInterval(breathId),120000);
+}
+document.getElementById('timerStop').onclick=()=>{ clearInterval(timerId); clearInterval(breathId); document.getElementById('timerBox').classList.add('hide'); };
+
+/* ---------------- wiring ---------------- */
+document.getElementById('send').onclick=()=>handle(input.value);
+input.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); handle(input.value); }});
+document.querySelectorAll('.skill').forEach(b=> b.onclick=()=>{ say(b.firstChild.textContent,'me'); startFlow(b.dataset.flow); });
+const suds=document.getElementById('suds');
+suds.oninput=()=>document.getElementById('sudsN').textContent=suds.value;
+document.getElementById('logSuds').onclick=()=>{ logSUDS(parseInt(suds.value)); say(`Logged distress ${suds.value}/10.`,'sys'); };
+document.getElementById('export').onclick=()=>{
+  const blob=new Blob([JSON.stringify(store.diary,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='anchor-diary-card.json'; a.click();
+};
+document.getElementById('clear').onclick=()=>{ if(confirm('Delete all diary entries?')){ store.diary=[]; renderDiary(); } };
+
+/* ---------------- opening ---------------- */
+renderDiary();
+botSeq([
+  "Hi — I'm Anchor, a DBT skills coach. I work the way a DBT therapist works between sessions: validate first, then pick a skill that matches how activated you are.",
+  "Two things up front. I'm a practice tool, **not a therapist**, and I don't replace one. And if you're in danger right now, contact emergency services or a crisis line — the numbers are at the top.",
+  "So: what's going on right now?"
+]);
+setChips(["Someone's pulling away from me","I want to hurt myself","I'm about to do something impulsive","I blew up at someone","I feel empty","Just show me a skill"]);
+</script>
+</body>
+</html>
